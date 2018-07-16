@@ -12,21 +12,25 @@
 - Run `kubectl apply -f web`
 - You should see the below pods being created:
 
-        $ kubectl get po
-        NAME                              READY     STATUS              RESTARTS   AGE
-        kds-postgresql-844c696487-4trsg   0/1       Running             0          4s
-        kds-service-7dd564bdc-k9kpl       0/1       ContainerCreating   0          2s
-        kds-service-7dd564bdc-s8fsx       0/1       ContainerCreating   0          2s
-        kds-service-7dd564bdc-xqnbn       0/1       ContainerCreating   0          2s
+  ```console
+  $ kubectl get po
+  NAME                              READY     STATUS              RESTARTS   AGE
+  kds-postgresql-844c696487-4trsg   0/1       Running             0          4s
+  kds-service-7dd564bdc-k9kpl       0/1       ContainerCreating   0          2s
+  kds-service-7dd564bdc-s8fsx       0/1       ContainerCreating   0          2s
+  kds-service-7dd564bdc-xqnbn       0/1       ContainerCreating   0          2s
+  ```
 
 - After a few seconds, you should then see:
 
-        $ kubectl get po
-        NAME                              READY     STATUS    RESTARTS   AGE
-        kds-postgresql-844c696487-4trsg   1/1       Running   0          25s
-        kds-service-7dd564bdc-k9kpl       1/1       Running   0          23s
-        kds-service-7dd564bdc-s8fsx       1/1       Running   0          23s
-        kds-service-7dd564bdc-xqnbn       1/1       Running   0          23s
+  ```console
+  $ kubectl get po
+  NAME                              READY     STATUS    RESTARTS   AGE
+  kds-postgresql-844c696487-4trsg   1/1       Running   0          25s
+  kds-service-7dd564bdc-k9kpl       1/1       Running   0          23s
+  kds-service-7dd564bdc-s8fsx       1/1       Running   0          23s
+  kds-service-7dd564bdc-xqnbn       1/1       Running   0          23s
+  ```
 
 - Run `minikube addons enable ingress`
 - Run `minikube service kds-service`
@@ -79,7 +83,7 @@ In case you need or want to reproduce these steps, these are:
 
 ### Querying the DB
 
-```
+```console
 $ DB_POD_ID="$(kubectl get po | grep kds-postgresql | awk '{print $1}')"
 
 $ kubectl exec -it "$DB_POD_ID" -- psql -U postgres users
