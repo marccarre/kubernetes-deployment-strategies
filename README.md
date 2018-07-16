@@ -15,7 +15,7 @@
 - Wait for all agents to start & connect to Weave Cloud. This may take a few minutes.
 - Click "_View your cluster_"
 
-### Configure Weave Cloud for Continuous Delivery
+### Enable GitOps
 
 - Click on "_Deploy_" and then "_Configure_".
 - Fork this repository.
@@ -23,6 +23,7 @@
 
 Once done, Weave Cloud will synchronise your Kubernetes cluster with your repository.
 You should eventually see in your Kubernetes cluster a PostgreSQL DB and a web service using it:
+
 ```console
 $ kubectl get po
 NAME                              READY     STATUS    RESTARTS   AGE
@@ -34,62 +35,12 @@ kds-service-f8ddcdc68-krd8h       1/1       Running   0          20s
 
 That's all folks! Welcome to GitOps with Weave Cloud!
 
-### Deploy the DB and web service without Weave Cloud
-
-If you do NOT want to use Weave Cloud, you can still run this demo by deploying manually instead.
-Skip the "_Install Weave Cloud_" and "_Configure Weave Cloud_" steps above, and do the following:
-
-- Run `kubectl apply -f db`
-- Run `kubectl apply -f web`
-- You should see the below pods being created:
-
-  ```console
-  $ kubectl get po
-  NAME                              READY     STATUS              RESTARTS   AGE
-  kds-postgresql-7cc4658b5f-vqkvt   0/1       Running             0          4s
-  kds-service-f8ddcdc68-99hdd       0/1       ContainerCreating   0          2s
-  kds-service-f8ddcdc68-hwcbj       0/1       ContainerCreating   0          2s
-  kds-service-f8ddcdc68-krd8h       0/1       ContainerCreating   0          2s
-  ```
-
-- After a few seconds, you should then see:
-
-  ```console
-  $ kubectl get po
-  NAME                              READY     STATUS    RESTARTS   AGE
-  kds-postgresql-7cc4658b5f-vqkvt   1/1       Running   0          25s
-  kds-service-f8ddcdc68-99hdd       1/1       Running   0          23s
-  kds-service-f8ddcdc68-hwcbj       1/1       Running   0          23s
-  kds-service-f8ddcdc68-krd8h       1/1       Running   0          23s
-  ```
-
 ### Test our deployment
 
-```console
-$ curl -fsS "$(minikube service kds-service --url)" | jq
-[
-  {
-    "method": "GET",
-    "path": "/"
-  },
-  {
-    "method": "GET",
-    "path": "/healthz"
-  },
-  {
-    "method": "POST",
-    "path": "/users"
-  },
-  {
-    "method": "GET",
-    "path": "/users"
-  },
-  {
-    "method": "GET",
-    "path": "/users/{id:[0-9]+}"
-  }
-]
+At this stage, we have deployed `kds-service:v1.0.0` which can store users' first names and family names.
+Let's try it out!
 
+```console
 $ curl -fsS "$(minikube service kds-service --url)/users" | jq
 []
 
@@ -100,7 +51,6 @@ $ curl -i -X POST \
 
 HTTP/1.1 201 Created
 Location: /users/1
-Date: Mon, 16 Jul 2018 10:46:42 GMT
 Content-Length: 0
 
 $ curl -fsS "$(minikube service kds-service --url)/users" | jq
@@ -119,6 +69,92 @@ $ curl -fsS "$(minikube service kds-service --url)/users/1" | jq
   "familyName": "Skywalker"
 }
 ```
+
+Great, we have successfully:
+
+- created a new user & saved it in our database,
+- read all users back (just one for now),
+- read only the user we created.
+
+### Enable Continuous Delivery
+
+Next, we will enable Continuous Delivery in Weave Cloud:
+
+- Go to [cloud.weave.works](https://cloud.weave.works).
+- Click on "_Deploy_", select `kds-service` and then click "_Automate_".
+
+After a few seconds, Weave Cloud will detect the latest version of `kds-service`, `v1.1.0` and will deploy it automatically.
+As we are doing GitOps, note that this change is reflected in your Git repository.
+
+### Test our deployment
+
+At this stage, we have deployed `kds-service:v1.1.0` which can store users' first names, family names, **and ages**.
+Let's try it out!
+
+```console
+$ curl -fsS "$(minikube service kds-service --url)/users" | jq
+[
+  {
+    "id": 1,
+    "firstName": "Luke",
+    "familyName": "Skywalker",
+    "age": 0
+  }
+]
+
+$ curl -i -X POST \
+  -H "Content-Type: application/json" \
+  --data '{"firstName":"Obi-Wan","familyName":"Kenobi","age":40}' \
+  "$(minikube service kds-service --url)/users"
+
+HTTP/1.1 201 Created
+Location: /users/2
+Content-Length: 0
+
+$ curl -fsS "$(minikube service kds-service --url)/users" | jq
+[
+  {
+    "id": 1,
+    "firstName": "Luke",
+    "familyName": "Skywalker",
+    "age": 0
+  },
+  {
+    "id": 2,
+    "firstName": "Obi-Wan",
+    "familyName": "Kenobi",
+    "age": 40
+  },
+]
+
+$ curl -fsS "$(minikube service kds-service --url)/users/2" | jq
+{
+  "id": 2,
+  "firstName": "Obi-Wan",
+  "familyName": "Kenobi",
+  "age": 40
+}
+```
+
+Great, like before, we have successfully:
+
+- created a new user & saved it in our database,
+- read all users back (the one we had previously saved, which has the default age `0`, and the one we just created),
+- read only the user we created.
+
+### Rolling back
+
+Maybe storing the `age` is actually something we have second thoughts about.
+Or maybe we want to roll this change back, for whatever reason.
+
+- Go to [cloud.weave.works](https://cloud.weave.works).
+- Click on "_Deploy_", select `kds-service` and then click "_De-Automate_".
+- Click on "_Release_" next to "_v1.0.0_", our previous version.
+
+That's all folks! We have just rolled back to our previous version.
+
+What about the database?
+As we've packaged migrations to upgrade & downgrade it when we deploy `kds-service`, changes to its schema are automatically taken care of.
 
 ## Misc.
 
