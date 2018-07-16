@@ -66,6 +66,30 @@ Skip the "_Install Weave Cloud_" and "_Configure Weave Cloud_" steps above, and 
 ### Test our deployment
 
 ```console
+$ curl -fsS "$(minikube service kds-service --url)" | jq
+[
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "GET",
+    "path": "/healthz"
+  },
+  {
+    "method": "POST",
+    "path": "/users"
+  },
+  {
+    "method": "GET",
+    "path": "/users"
+  },
+  {
+    "method": "GET",
+    "path": "/users/{id:[0-9]+}"
+  }
+]
+
 $ curl -fsS "$(minikube service kds-service --url)/users" | jq
 []
 
