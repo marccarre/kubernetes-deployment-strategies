@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: kds-service
-        image: marccarre/kds-service:master-6c3192f
+        image: marccarre/kds-service:master-a71363e
         args:
         - --db-uri=postgres://postgres@kds-postgresql:5432/users?sslmode=disable
         - --db-passwd-file=/home/service/.credentials/postgres-password
