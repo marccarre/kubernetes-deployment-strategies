@@ -11,7 +11,7 @@ spec:
   # This is to prevent a service that crashes on startup from getting rolled
   # out to all replicas. Set maxUnavailable to 0 and maxSurge to 1 to enable
   # a quasi-canary style deployment.
-  minReadySeconds: 15
+  minReadySeconds: 10
   strategy:
     rollingUpdate:
       maxUnavailable: 0
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: kds-service
-        image: marccarre/kds-service:master-66b1ec8
+        image: marccarre/kds-service:master-6c3192f
         args:
         - --db-uri=postgres://postgres@kds-postgresql:5432/users?sslmode=disable
         - --db-passwd-file=/home/service/.credentials/postgres-password
@@ -31,6 +31,18 @@ spec:
         - --http-port=8080
         ports:
         - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 60
         volumeMounts:
         - name: kds-postgresql
           mountPath: /home/service/.credentials
