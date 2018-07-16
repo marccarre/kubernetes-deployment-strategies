@@ -1,0 +1,1 @@
+{"jobID":"5f63862d-da4f-df20-6496-e99b8c3f1f97","spec":{"type":"policy","cause":{"Message":"","User":"marc \u003cmarc@weave.works\u003e"},"spec":{"default:deployment/kds-service":{"add":null,"remove":{"automated":"true"}}}},"result":null}
