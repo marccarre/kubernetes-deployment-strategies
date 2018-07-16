@@ -99,7 +99,7 @@ spec:
         - name: PGUSER
           value: "postgres"
         - name: POSTGRES_DB
-          value: ""
+          value: "users"
         - name: POSTGRES_INITDB_ARGS
           value: ""
         - name: PGDATA
