@@ -6,7 +6,38 @@
 
 - Install minikube & start your local cluster.
 
-### Deploy the DB and web service
+### Install Weave Cloud
+
+- Go to [cloud.weave.works](https://cloud.weave.works).
+- Click on "_+Connect a cluster_".
+- Select "_Kubernetes_" and then "_Minikube_".
+- Run the command provided.
+- Wait for all agents to start & connect to Weave Cloud. This may take a few minutes.
+- Click "_View your cluster_"
+
+### Configure Weave Cloud for Continuous Delivery
+
+- Click on "_Deploy_" and then "_Configure_".
+- Fork this repository.
+- Configure "_Deploy_" to point to your repository & follow the instructions.
+
+Once done, Weave Cloud will synchronise your Kubernetes cluster with your repository.
+You should eventually see in your Kubernetes cluster a PostgreSQL DB and a web service using it:
+```console
+$ kubectl get po
+NAME                              READY     STATUS    RESTARTS   AGE
+kds-postgresql-7cc4658b5f-vqkvt   1/1       Running   0          20s
+kds-service-f8ddcdc68-99hdd       1/1       Running   0          20s
+kds-service-f8ddcdc68-hwcbj       1/1       Running   0          20s
+kds-service-f8ddcdc68-krd8h       1/1       Running   0          20s
+```
+
+That's all folks! Welcome to GitOps with Weave Cloud!
+
+### Deploy the DB and web service without Weave Cloud
+
+If you do NOT want to use Weave Cloud, you can still run this demo by deploying manually instead.
+Skip the "_Install Weave Cloud_" and "_Configure Weave Cloud_" steps above, and do the following:
 
 - Run `kubectl apply -f db`
 - Run `kubectl apply -f web`
@@ -15,10 +46,10 @@
   ```console
   $ kubectl get po
   NAME                              READY     STATUS              RESTARTS   AGE
-  kds-postgresql-844c696487-4trsg   0/1       Running             0          4s
-  kds-service-7dd564bdc-k9kpl       0/1       ContainerCreating   0          2s
-  kds-service-7dd564bdc-s8fsx       0/1       ContainerCreating   0          2s
-  kds-service-7dd564bdc-xqnbn       0/1       ContainerCreating   0          2s
+  kds-postgresql-7cc4658b5f-vqkvt   0/1       Running             0          4s
+  kds-service-f8ddcdc68-99hdd       0/1       ContainerCreating   0          2s
+  kds-service-f8ddcdc68-hwcbj       0/1       ContainerCreating   0          2s
+  kds-service-f8ddcdc68-krd8h       0/1       ContainerCreating   0          2s
   ```
 
 - After a few seconds, you should then see:
@@ -26,16 +57,13 @@
   ```console
   $ kubectl get po
   NAME                              READY     STATUS    RESTARTS   AGE
-  kds-postgresql-844c696487-4trsg   1/1       Running   0          25s
-  kds-service-7dd564bdc-k9kpl       1/1       Running   0          23s
-  kds-service-7dd564bdc-s8fsx       1/1       Running   0          23s
-  kds-service-7dd564bdc-xqnbn       1/1       Running   0          23s
+  kds-postgresql-7cc4658b5f-vqkvt   1/1       Running   0          25s
+  kds-service-f8ddcdc68-99hdd       1/1       Running   0          23s
+  kds-service-f8ddcdc68-hwcbj       1/1       Running   0          23s
+  kds-service-f8ddcdc68-krd8h       1/1       Running   0          23s
   ```
 
-- Run `minikube addons enable ingress`
-- Run `minikube service kds-service`
-
-### Talk to the service
+### Test our deployment
 
 ```console
 $ curl -fsS "$(minikube service kds-service --url)/users" | jq
