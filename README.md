@@ -27,10 +27,10 @@ You should eventually see in your Kubernetes cluster a PostgreSQL DB and a web s
 ```console
 $ kubectl get po
 NAME                              READY     STATUS    RESTARTS   AGE
-kds-postgresql-7cc4658b5f-vqkvt   1/1       Running   0          20s
-kds-service-f8ddcdc68-99hdd       1/1       Running   0          20s
-kds-service-f8ddcdc68-hwcbj       1/1       Running   0          20s
-kds-service-f8ddcdc68-krd8h       1/1       Running   0          20s
+kds-postgresql-84798fd5f-gmbl4     1/1       Running   0          20s
+kds-service-847fb558b8-00001       1/1       Running   0          20s
+kds-service-847fb558b8-00002       1/1       Running   0          20s
+kds-service-847fb558b8-00003       1/1       Running   0          20s
 ```
 
 That's all folks! Welcome to GitOps with Weave Cloud!
@@ -38,6 +38,17 @@ That's all folks! Welcome to GitOps with Weave Cloud!
 ### Test our deployment
 
 At this stage, we have deployed `kds-service:v1.0.0` which can store users' first names and family names.
+We package database migrations within the `kds-service`pod, therefore our database's schema has been automatically created during the rollout of the service:
+
+```console
+$ kubectl logs kds-service-847fb558b8-00001
+level=info msg="upgrading DB schema..." currentVersion=0 targetVersion=1
+$ kubectl logs kds-service-847fb558b8-00002
+level=info msg="nothing to do: DB already at or above the target schema version" currentVersion=1 targetVersion=1
+$ kubectl logs kds-service-847fb558b8-00003
+level=info msg="nothing to do: DB already at or above the target schema version" currentVersion=1 targetVersion=1
+```
+
 Let's try it out!
 
 ```console
@@ -89,6 +100,17 @@ As we are doing GitOps, note that this change is reflected in your Git repositor
 ### Test our deployment
 
 At this stage, we have deployed `kds-service:v1.1.0` which can store users' first names, family names, **and ages**.
+Again, since we package database migrations within the `kds-service`pod, our database's schema has been automatically upgraded during the rollout of the newer version of our service, with an additional `age` column in our `users` table.
+
+```console
+$ kubectl logs kds-service-57677f44d7-00001
+level=info msg="upgrading DB schema..." currentVersion=1 targetVersion=2
+$ kubectl logs kds-service-57677f44d7-00002
+level=info msg="nothing to do: DB already at or above the target schema version" currentVersion=2 targetVersion=2
+$ kubectl logs kds-service-57677f44d7-00003
+level=info msg="nothing to do: DB already at or above the target schema version" currentVersion=2 targetVersion=2
+```
+
 Let's try it out!
 
 ```console
@@ -154,7 +176,32 @@ Or maybe we want to roll this change back, for whatever reason.
 That's all folks! We have just rolled back to our previous version.
 
 What about the database?
-As we've packaged migrations to upgrade & downgrade it when we deploy `kds-service`, changes to its schema are automatically taken care of.
+- No migration is run in our case:
+  ```console
+  $ kubectl logs kds-service-847fb558b8-00004
+  level=info msg="upgrading DB schema..." currentVersion=2 targetVersion=1
+  $ kubectl logs kds-service-847fb558b8-00005
+  level=info msg="upgrading DB schema..." currentVersion=2 targetVersion=1
+  $ kubectl logs kds-service-847fb558b8-00006
+  level=info msg="upgrading DB schema..." currentVersion=2 targetVersion=1
+  ```
+- Since our schema & code changes are backward compatible, we can still query & create users:
+  ```console
+  $ curl -fsS 35.225.108.173:8080/users | jq
+  [
+    {
+      "id": 1,
+      "firstName": "Luke",
+      "familyName": "Skywalker"
+    },
+    {
+      "id": 2,
+      "firstName": "Obi-Wan",
+      "familyName": "Kenobi"
+    }
+  ]
+  ```
+  N.B.: The age field is not returned, even though still present in database. Rolling forward again would make them being returned.
 
 ## Misc.
 
