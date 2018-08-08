@@ -4,7 +4,7 @@
 
 ### Create a Kubernetes cluster
 
-- Install minikube & start your local cluster.
+- Install [minikube](https://kubernetes.io/docs/setup/minikube/#installation) & start your local cluster.
 
 ### Install Weave Cloud
 
